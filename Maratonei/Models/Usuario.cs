@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 namespace Maratonei.Models {
     [Table( "tb_usuario" )]
     public class Usuario {
-        [Key, Column("usuario_id")]
+        [Key, Column( "usuario_id" )]
         public int UsuarioId { get; set; }
-        [Column("nome")]
+        [Column( "nome" )]
         public string Nome { get; set; }
-        [Column("senha")]
+        [Column( "senha" )]
         public string Senha { get; set; }
+        [Column( "trakt_user" )]
+        public string traktUser { get; set; }
     }
 }

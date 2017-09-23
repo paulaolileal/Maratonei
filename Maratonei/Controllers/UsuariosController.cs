@@ -72,28 +72,26 @@ namespace Maratonei.Controllers {
                 return BadRequest( ModelState );
             }
 
+            var exist = _context.Usuarios.SingleOrDefaultAsync( user => user.Nome == usuario.Nome );
+            if(exist != null) {
+                return new ObjectResult( "This username is already being used." );
+            }
+
             _context.Usuarios.Add( usuario );
             await _context.SaveChangesAsync( );
 
             return CreatedAtAction( "GetUsuario", new { id = usuario.UsuarioId }, usuario );
         }
 
-        // DELETE: api/Usuarios/5
-        [HttpDelete( "{id}" )]
-        public async Task<IActionResult> DeleteUsuario( [FromRoute] int id ) {
+
+        [HttpPost( "Login/" )]
+        [Route( "Usuarios/Login" )]
+        public async Task<IActionResult> Login( [FromBody] Usuario usuario ) {
             if (!ModelState.IsValid) {
                 return BadRequest( ModelState );
             }
-
-            var usuario = await _context.Usuarios.SingleOrDefaultAsync( m => m.UsuarioId == id );
-            if (usuario == null) {
-                return NotFound( );
-            }
-
-            _context.Usuarios.Remove( usuario );
-            await _context.SaveChangesAsync( );
-
-            return Ok( usuario );
+            var exist = await _context.Usuarios.SingleOrDefaultAsync( user => user.Nome == usuario.Nome && user.Senha == usuario.Senha );
+            return ( Ok( exist ) );
         }
 
         private bool UsuarioExists( int id ) {
