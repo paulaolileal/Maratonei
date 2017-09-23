@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace Maratonei.Models {
     public class EntidadesContexto : DbContext {
-
         public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<Serie> Series { get; set; }
 
         public EntidadesContexto( DbContextOptions<EntidadesContexto> options ) : base( options ) { }
 
