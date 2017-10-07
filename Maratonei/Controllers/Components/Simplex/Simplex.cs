@@ -48,7 +48,7 @@ namespace Maratonei.Controllers.Components.Simplex {
             int lin = 1;
             linePositions[ 0 ] = "f(x)";
             foreach (var restriction in restrictionsList) {
-                foreach (var element in restriction.Transform( )) {
+                foreach (var element in restriction.Transform( (objectiveFunction.Type == ObjectiveFunction.FuncType.Min) ? true : false )) {
                     table[ lin, col ] = new Tuple<double, double>( element.Item2, 0 );
 
                     linePositions[ lin ] = "x" + ( ( table.GetLength( 1 ) - 1 ) + lin );
@@ -57,11 +57,12 @@ namespace Maratonei.Controllers.Components.Simplex {
                 lin++;
                 col = 0;
             }
-            //FaseOne( );
+            Print( );
         }
 
         public ObjectiveFunction FaseOne() {
             restartFaseOne:
+            var allPositive = true;
             for (int lin = 1; lin < table.GetLength( 0 ); lin++) {
                 if (table[ lin, 0 ].Item1 < 0) {
                     for (int col = 1; col < table.GetLength( 1 ); col++) {
@@ -69,43 +70,61 @@ namespace Maratonei.Controllers.Components.Simplex {
                             var quo = GetInvertedLessQuociente( lin, col );
                             table[ PermitedLine, PermitedColumn ] = new Tuple<double, double>( table[ PermitedLine, PermitedColumn ].Item1, quo );
                             table = AlgortimoDatroca( quo );
+                            allPositive = false;
+                            Print( );
                             goto restartFaseOne;
                         }
                     }
-                    // SOLUÇÃO IMPOSSIVEL
-                    return GenerateSolution( ObjectiveFunction.RespType.Impossible );
                 }
             }
+
+            if (!allPositive) {
+                // SOLUÇÃO IMPOSSIVEL
+                return GenerateSolution( ObjectiveFunction.RespType.Impossible );
+            }
+
             // Fim do loop de algortimos da troca ou membro livre negativo não existe
             return FaseTwo( );
         }
 
         public ObjectiveFunction FaseTwo() {
             restartFaseTwo:
-            for (int col = 1; col < table.GetLength( 0 ); col++) {
+            var fxNegative = true;
+            for (int col = 1; col < table.GetLength( 1 ); col++) {
                 if (table[ 0, col ].Item1 > 0) {
                     for (int lin = 1; lin < table.GetLength( 1 ); lin++) {
                         if (table[ lin, col ].Item1 > 0) {
                             var quo = GetInvertedLessQuociente( lin, col );
                             table[ PermitedLine, PermitedColumn ] = new Tuple<double, double>( table[ PermitedLine, PermitedColumn ].Item1, quo );
                             table = AlgortimoDatroca( quo );
+                            Print( );
+                            fxNegative = false;
                             goto restartFaseTwo;
                         }
                     }
-                    // SOLUÇÃO ILIMITADA
-                    Debug.WriteLine( "" );
-                    return GenerateSolution( ObjectiveFunction.RespType.Unlimited );
+                }
+            }
 
-                } else if (table[ 0, col ].Item1 < 0) {
-                    // ENCONTRADO A SOLUÇÃO OTIMA
-                    Debug.WriteLine( "" );
-                    return GenerateSolution( ObjectiveFunction.RespType.Optimum );
-
-                } else {
+            for (int col = 1; col < table.GetLength( 1 ); col++) {
+                if (table[ 0, col].Item1 == 0){
                     // MULTIPLAS SOLUÇÕES
                     return GenerateSolution( ObjectiveFunction.RespType.Multiple );
                 }
             }
+
+            if (fxNegative == false) {
+                // SOLUÇÃO ILIMITADA
+                Debug.WriteLine( "" );
+                return GenerateSolution( ObjectiveFunction.RespType.Unlimited );
+
+            }
+            if (fxNegative) {
+                // ENCONTRADO A SOLUÇÃO OTIMA
+                Debug.WriteLine( "" );
+                return GenerateSolution( ObjectiveFunction.RespType.Optimum );
+
+            }
+
             return null;
         }
 
@@ -127,6 +146,7 @@ namespace Maratonei.Controllers.Components.Simplex {
         }
 
         public Tuple<double, double>[ , ] AlgortimoDatroca( double quo ) {
+            
             for (int col = 0; col < table.GetLength( 1 ); col++) {
                 if (col != PermitedColumn) {
                     table[ PermitedLine, col ] = new Tuple<double, double>( table[ PermitedLine, col ].Item1, table[ PermitedLine, col ].Item1 * quo );
@@ -166,7 +186,11 @@ namespace Maratonei.Controllers.Components.Simplex {
             var resp = new ObjectiveFunction( objectiveFunction.Type ) {
                 Solution = solutionType
             };
-            resp.Add( "Z", table[ 0, 0 ].Item1 );
+            var value = table[ 0, 0 ].Item1;
+            if(objectiveFunction.Type == ObjectiveFunction.FuncType.Max) {
+                value = value * -1;
+            }
+            resp.Add( "Z",  value);
             for (int i = 1; i < linePositions.GetLength( 0 ); i++) {
                 resp.Add( linePositions[ i ], table[ i, 0 ].Item1 );
             }
@@ -177,14 +201,14 @@ namespace Maratonei.Controllers.Components.Simplex {
         }
 
         public void Print() {
-            Debug.WriteLine( "+++++++++++++++++++++++++++++++" );
+            Debug.WriteLine( "-----------------------------------" );
             for (int lin = 0; lin < table.GetLength( 0 ); lin++) {
                 for (int col = 0; col < table.GetLength( 1 ); col++) {
-                    Debug.Write( table[ lin, col ].Item1 + " / " + table[ lin, col ].Item2 + "    " );
+                    Debug.Write( table[ lin, col ].Item1 + " / " + table[ lin, col ].Item2 + "\t|\t" );
                 }
                 Debug.WriteLine( "" );
             }
-            Debug.WriteLine( "+++++++++++++++++++++++++++++++" );
+            Debug.WriteLine( "-----------------------------------" );
         }
 
 

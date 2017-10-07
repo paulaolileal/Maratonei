@@ -72,25 +72,28 @@ namespace Maratonei.Controllers {
                 return BadRequest( ModelState );
             }
 
-            var exist = _context.Usuarios.SingleOrDefaultAsync( user => user.Nome == usuario.Nome );
-            if(exist != null) {
-                return new ObjectResult( "This username is already being used." );
+            var exist = await _context.Usuarios.SingleOrDefaultAsync( user => user.Nome.Equals( usuario.Nome ) );
+            if (exist != null) {
+                return BadRequest( "This username is already being used." );
             }
 
             _context.Usuarios.Add( usuario );
             await _context.SaveChangesAsync( );
 
             return CreatedAtAction( "GetUsuario", new { id = usuario.UsuarioId }, usuario );
+
         }
 
 
         [HttpPost( "Login/" )]
         [Route( "Usuarios/Login" )]
         public async Task<IActionResult> Login( [FromBody] Usuario usuario ) {
-            if (!ModelState.IsValid) {
-                return BadRequest( ModelState );
-            }
+
             var exist = await _context.Usuarios.SingleOrDefaultAsync( user => user.Nome == usuario.Nome && user.Senha == usuario.Senha );
+
+            if(exist == null) {
+                return BadRequest( "Invalid username or password." );
+            }
             return ( Ok( exist ) );
         }
 

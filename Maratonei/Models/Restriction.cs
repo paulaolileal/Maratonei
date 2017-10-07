@@ -18,9 +18,15 @@ namespace Maratonei.Models {
             R.Add( new Tuple<string, double>( variable, value ) );
         }
 
-        public List<Tuple<string, double>> Transform() {
+        public List<Tuple<string, double>> Transform( bool isMin = false ) {
             var TransformedR = new List<Tuple<string, double>>( );
-            if (Type == FuncType.GreaterEqual) {
+
+            if (isMin) {
+                foreach (var element in R) {
+                    TransformedR.Add( new Tuple<string, double>( element.Item1, element.Item2 * -1 ) );
+                }
+                return TransformedR;
+            }else if (Type == FuncType.GreaterEqual) {
                 foreach (var element in R) {
                     TransformedR.Add( new Tuple<string, double>( element.Item1, element.Item2 * -1 ) );
                 }

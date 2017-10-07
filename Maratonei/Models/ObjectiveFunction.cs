@@ -32,7 +32,7 @@ namespace Maratonei.Models {
 
         public List<Tuple<string, double>> Transform() {
             var TransformedZ = new List<Tuple<string, double>>( );
-            if (Type == FuncType.Max) {
+            if (Type == FuncType.Min) {
                 Z.ForEach( element => TransformedZ.Add( new Tuple<string, double>( element.Item1, element.Item2 * -1 ) ) );
                 return TransformedZ;
             }
