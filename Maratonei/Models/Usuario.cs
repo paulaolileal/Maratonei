@@ -6,6 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Maratonei.Models {
+    /// <summary>
+    /// Modelo do usuario
+    /// </summary>
     [Table( "tb_usuario" )]
     public class Usuario {
         [Key, Column( "usuario_id" )]

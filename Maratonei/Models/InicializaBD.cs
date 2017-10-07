@@ -7,12 +7,13 @@ using System.Linq;
 namespace Maratonei.Models {
     public static class InicializaBD {
         public static void Initialize( EntidadesContexto context ) {
-
+            // Inicializa o banco caso nao tenha sido criado ainda
             context.Database.EnsureCreated( );
             if (!context.Usuarios.Any( )) {
                 context.Usuarios.Add( new Usuario { Nome = "teste", Senha = "teste", traktUser = "teste" } );
             }
             context.SaveChanges( );
+
         }
     }
 }

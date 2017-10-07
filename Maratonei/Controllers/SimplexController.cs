@@ -15,18 +15,29 @@ namespace Maratonei.Controllers {
     public class SimplexController : Controller {
         private readonly EntidadesContexto _context;
 
+        /// <summary>
+        /// Construtor padrao
+        /// </summary>
+        /// <param name="context"></param>
         public SimplexController( EntidadesContexto context ) {
             _context = context;
         }
 
-        // GET: api/Series/5
+        /// <summary>
+        /// Requisicao para resolucao do simplex
+        /// </summary>
+        /// <param name="SimplexInput">Funcao objetiva + lista de restricoes</param>
+        /// <returns>Codigo da solução</returns>
         [HttpPost( "Solver/" )]
         [Route( "Simplex/Solver" )]
         public IActionResult Solver( [FromBody] SimplexInput SimplexInput ) {
-            Simplex simplex = new Simplex( SimplexInput.ObjectiveFunction, SimplexInput.Restrictions );
-            var resp = simplex.Solver( );
-
-            return Ok( resp );
+            try {
+                Simplex simplex = new Simplex( SimplexInput.ObjectiveFunction, SimplexInput.Restrictions );
+                var resp = simplex.Solver( );
+                return Ok( resp );
+            } catch {
+                return BadRequest( "It was not possible to calculate the simplex" );
+            }
         }
     }
 }

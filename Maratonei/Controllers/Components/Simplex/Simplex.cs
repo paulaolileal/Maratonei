@@ -6,18 +6,30 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Maratonei.Controllers.Components.Simplex {
+
+    /// <summary>
+    /// Classe que realiza o calculo do simplex
+    /// </summary>
     public class Simplex {
 
+        // Estruturas do simplex
         private Tuple<double, double>[ , ] table;
         private ObjectiveFunction objectiveFunction;
         private List<Restriction> restrictionsList;
 
+        // Arrays para guardar os identificadores das variaveis
         private string[ ] columnPositions;
         private string[ ] linePositions;
 
+        // Linhas e colunas permitidas
         private int PermitedColumn;
         private int PermitedLine;
 
+        /// <summary>
+        /// Construtor padrão
+        /// </summary>
+        /// <param name="po">Funcao objetiva</param>
+        /// <param name="restrictions">Lista de restricoes</param>
         public Simplex( ObjectiveFunction po, List<Restriction> restrictions ) {
             objectiveFunction = po;
             restrictionsList = restrictions;
@@ -28,27 +40,38 @@ namespace Maratonei.Controllers.Components.Simplex {
             linePositions = new string[ restrictions.Count( ) + 1 ];
         }
 
+        /// <summary>
+        /// Chamada para resolver o simplex
+        /// </summary>
+        /// <returns>Retorna a estrutura em formato de funcao</returns>
         public ObjectiveFunction Solver() {
             PopuleTable( );
+            // Chamada da fase um
             return FaseOne( );
         }
 
+        /// <summary>
+        /// Inicia a tabela do simplex, colocando os valores das funcoes
+        /// nas devidas posicoes da tabela.
+        /// </summary>
         public void PopuleTable() {
             int col = 1;
             table[ 0, 0 ] = new Tuple<double, double>( 0, 0 );
-            columnPositions[ 0 ] = "ml";
 
+            // Insere os elementos fa funcao objetiva
+            columnPositions[ 0 ] = "ml";
             foreach (var element in objectiveFunction.Transform( )) {
                 table[ 0, col ] = new Tuple<double, double>( element.Item2, 0 );
                 columnPositions[ col ] = element.Item1;
                 col++;
             }
 
+            // Insere os elementos das restricoes
             col = 0;
             int lin = 1;
             linePositions[ 0 ] = "f(x)";
             foreach (var restriction in restrictionsList) {
-                foreach (var element in restriction.Transform( (objectiveFunction.Type == ObjectiveFunction.FuncType.Min) ? true : false )) {
+                foreach (var element in restriction.Transform( ( objectiveFunction.Type == ObjectiveFunction.FuncType.Min ) ? true : false )) {
                     table[ lin, col ] = new Tuple<double, double>( element.Item2, 0 );
 
                     linePositions[ lin ] = "x" + ( ( table.GetLength( 1 ) - 1 ) + lin );
@@ -60,6 +83,12 @@ namespace Maratonei.Controllers.Components.Simplex {
             Print( );
         }
 
+        /// <summary>
+        /// Fase um do processo de resolução. Verifica as linhas da coluna zero 
+        /// procurando um elemento negativo, se o mesmo existe procura na primeira
+        /// linha se existe um negativo
+        /// </summary>
+        /// <returns>Chama a fase dois</returns>
         public ObjectiveFunction FaseOne() {
             restartFaseOne:
             var allPositive = true;
@@ -87,6 +116,12 @@ namespace Maratonei.Controllers.Components.Simplex {
             return FaseTwo( );
         }
 
+        /// <summary>
+        /// Fase dois do processo de resolucao. Verifica as linhas da coluna zero
+        /// procurando um elemento positivo, se o mesmo existe procura na primeira 
+        /// linha se existe um positivo.
+        /// </summary>
+        /// <returns>Retorna a devida solucao</returns>
         public ObjectiveFunction FaseTwo() {
             restartFaseTwo:
             var fxNegative = true;
@@ -106,7 +141,7 @@ namespace Maratonei.Controllers.Components.Simplex {
             }
 
             for (int col = 1; col < table.GetLength( 1 ); col++) {
-                if (table[ 0, col].Item1 == 0){
+                if (table[ 0, col ].Item1 == 0) {
                     // MULTIPLAS SOLUÇÕES
                     return GenerateSolution( ObjectiveFunction.RespType.Multiple );
                 }
@@ -114,13 +149,11 @@ namespace Maratonei.Controllers.Components.Simplex {
 
             if (fxNegative == false) {
                 // SOLUÇÃO ILIMITADA
-                Debug.WriteLine( "" );
                 return GenerateSolution( ObjectiveFunction.RespType.Unlimited );
 
             }
             if (fxNegative) {
                 // ENCONTRADO A SOLUÇÃO OTIMA
-                Debug.WriteLine( "" );
                 return GenerateSolution( ObjectiveFunction.RespType.Optimum );
 
             }
@@ -128,6 +161,12 @@ namespace Maratonei.Controllers.Components.Simplex {
             return null;
         }
 
+        /// <summary>
+        /// Funcao que encontra o menor quociente invertido. 
+        /// </summary>
+        /// <param name="i">Linha atual</param>
+        /// <param name="j">Coluna atual</param>
+        /// <returns>Retorna o elemento permissivo invertido</returns>
         public double GetInvertedLessQuociente( int i, int j ) {
             double resp = 0, quo = 0, menor = Int32.MaxValue;
             for (int lin = 1; lin < table.GetLength( 0 ); lin++) {
@@ -145,18 +184,27 @@ namespace Maratonei.Controllers.Components.Simplex {
             return ( 1 / resp );
         }
 
-        public Tuple<double, double>[ , ] AlgortimoDatroca( double quo ) {
-            
+        /// <summary>
+        /// Realiza o processo do algoritmo da troca.
+        /// </summary>
+        /// <param name="quociente"></param>
+        /// <returns>Nova tabela</returns>
+        public Tuple<double, double>[ , ] AlgortimoDatroca( double quociente ) {
+            // Multiplica os elementos da linha permissiva pelo quociente e insere na celula inferior da posicao
             for (int col = 0; col < table.GetLength( 1 ); col++) {
                 if (col != PermitedColumn) {
-                    table[ PermitedLine, col ] = new Tuple<double, double>( table[ PermitedLine, col ].Item1, table[ PermitedLine, col ].Item1 * quo );
+                    table[ PermitedLine, col ] = new Tuple<double, double>( table[ PermitedLine, col ].Item1, table[ PermitedLine, col ].Item1 * quociente );
                 }
             }
+
+            // Multiplica os elementos da coluna permissica pelo quociente (multiplicado por menos um) e insere na celula inferior da posicao
             for (int lin = 0; lin < table.GetLength( 0 ); lin++) {
                 if (lin != PermitedLine) {
-                    table[ lin, PermitedColumn ] = new Tuple<double, double>( table[ lin, PermitedColumn ].Item1, table[ lin, PermitedColumn ].Item1 * -quo );
+                    table[ lin, PermitedColumn ] = new Tuple<double, double>( table[ lin, PermitedColumn ].Item1, table[ lin, PermitedColumn ].Item1 * -quociente );
                 }
             }
+
+            // Multiplica para os outros elementos da linha permissica pelos da coluna permissiva e insere na celula inferior da posicao
             for (int lin = 0; lin < table.GetLength( 0 ); lin++) {
                 for (int col = 0; col < table.GetLength( 1 ); col++) {
                     if (lin != PermitedLine && col != PermitedColumn) {
@@ -165,10 +213,13 @@ namespace Maratonei.Controllers.Components.Simplex {
                 }
             }
 
+            // Realiza a troca das variaveis da linha permissiva pelo o da coluna permissiva
             var temp = columnPositions[ PermitedColumn ];
             columnPositions[ PermitedColumn ] = linePositions[ PermitedLine ];
             linePositions[ PermitedLine ] = temp;
 
+            // Gera a nova tabela, trocando as celulas superiores pelas infeirores para a linha e coluna permissiva e soma as 
+            // celulas inferiores e superiores para as outra posicoes
             Tuple<double, double>[ , ] resp = new Tuple<double, double>[ table.GetLength( 0 ), table.GetLength( 1 ) ];
             for (int i = 0; i < table.GetLength( 0 ); i++) {
                 for (int o = 0; o < table.GetLength( 1 ); o++) {
@@ -182,15 +233,16 @@ namespace Maratonei.Controllers.Components.Simplex {
             return resp;
         }
 
+        // Formata a resposta para cada tipo de solucao possivel
         public ObjectiveFunction GenerateSolution( ObjectiveFunction.RespType solutionType ) {
             var resp = new ObjectiveFunction( objectiveFunction.Type ) {
                 Solution = solutionType
             };
             var value = table[ 0, 0 ].Item1;
-            if(objectiveFunction.Type == ObjectiveFunction.FuncType.Max) {
+            if (objectiveFunction.Type == ObjectiveFunction.FuncType.Max) {
                 value = value * -1;
             }
-            resp.Add( "Z",  value);
+            resp.Add( "Z", value );
             for (int i = 1; i < linePositions.GetLength( 0 ); i++) {
                 resp.Add( linePositions[ i ], table[ i, 0 ].Item1 );
             }
@@ -200,15 +252,19 @@ namespace Maratonei.Controllers.Components.Simplex {
             return resp;
         }
 
+        /// <summary>
+        /// Mostra na tela a tabela atual. 
+        /// Somente no debug.
+        /// </summary>
         public void Print() {
-            Debug.WriteLine( "-----------------------------------" );
+            Debug.WriteLine( "----------------------------------------------------------------------" );
             for (int lin = 0; lin < table.GetLength( 0 ); lin++) {
                 for (int col = 0; col < table.GetLength( 1 ); col++) {
                     Debug.Write( table[ lin, col ].Item1 + " / " + table[ lin, col ].Item2 + "\t|\t" );
                 }
                 Debug.WriteLine( "" );
             }
-            Debug.WriteLine( "-----------------------------------" );
+            Debug.WriteLine( "----------------------------------------------------------------------" );
         }
 
 

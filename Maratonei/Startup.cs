@@ -55,7 +55,7 @@ namespace Maratonei {
             app.UseMvc( routes => {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Livros}/{action=Index}/{id?}" );
+                    template: "{controller=Home}/{action=Index}/{id?}" );
             } );
 
             InicializaBD.Initialize( contexto );
