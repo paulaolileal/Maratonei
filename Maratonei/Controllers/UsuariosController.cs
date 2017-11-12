@@ -89,7 +89,7 @@ namespace Maratonei.Controllers {
         [Route( "Usuarios/Login" )]
         public async Task<IActionResult> Login( [FromBody] Usuario usuario ) {
 
-            var exist = await _context.Usuarios.SingleOrDefaultAsync( user => user.Nome == usuario.Nome && user.Senha == usuario.Senha );
+            var exist = await _context.Usuarios.SingleOrDefaultAsync( user => user.Nome.Equals(usuario.Nome) && user.Senha.Equals(usuario.Senha) );
 
             if(exist == null) {
                 return BadRequest( "Invalid username or password." );
