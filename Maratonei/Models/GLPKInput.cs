@@ -23,6 +23,9 @@ namespace Maratonei.Models {
 
     public class GLPKObjective {
         public List<double> Values { get; set; }
+        public Operator Operation { get; set; }
+
+        public enum Operator { Minimize = 0, Maximize = 1}
 
         public GLPKObjective(List<double> obj) {
             Values = obj;

@@ -61,7 +61,11 @@ namespace Maratonei {
                     expression = input.Objective.Values.ElementAt( i ) * variables.ElementAt( i ) + expression;
                 }
 
-                model.AddObjective( new Objective( expression ) );
+                if (input.Objective.Operation == GLPKObjective.Operator.Maximize) {
+                    model.AddObjective( new Objective( expression, "Z", OPTANO.Modeling.Optimization.Enums.ObjectiveSense.Maximize ) );
+                } else {
+                    model.AddObjective( new Objective( expression, "Z", OPTANO.Modeling.Optimization.Enums.ObjectiveSense.Minimize ) );
+                }
 
                 var solver = new GLPKSolver( );
                 solver.Solve( model );
