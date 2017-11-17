@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Maratonei.Models {
 
+    /// <summary>
+    /// Objeto para restrição
+    /// </summary>
     public class GLPKRestriction {
         public List<double> Values { get; set; }
         public double Disponibility { get; set; }
@@ -21,6 +24,9 @@ namespace Maratonei.Models {
         }
     }
 
+    /// <summary>
+    /// Objeto para função objetiva
+    /// </summary>
     public class GLPKObjective {
         public List<double> Values { get; set; }
         public Operator Operation { get; set; }
@@ -36,6 +42,9 @@ namespace Maratonei.Models {
         }
     }
 
+    /// <summary>
+    /// Objeto para o modelo que une a lista de restrições e a função objetiva
+    /// </summary>
     public class GLPKInput {
         public List<string> Variables { get; set; }
         public List<GLPKRestriction> Restrictions { get; set; }
