@@ -12,6 +12,9 @@ namespace Maratonei {
     [Route( "api/[controller]" )]
     public class GLPKController : Controller {
 
+        /// <summary>
+        /// Requisição para os tipos de status possiveis da solução
+        /// </summary>
         [HttpGet( "GetStatus/" )]
         [Route( "GLPK/GetStatus" )]
         public IActionResult GetStatus() {
@@ -33,6 +36,8 @@ namespace Maratonei {
         [Route( "GLPK/Solver" )]
         public IActionResult Solver( [FromBody] GLPKInput input ) {
             try {
+            
+                // Cria o modelo e adiciona as variaveis
                 Dictionary<string, string> variableKeyName = new Dictionary<string, string>( );
                 var model = new Model( );
                 List<Variable> variables = new List<Variable>( );
@@ -42,6 +47,8 @@ namespace Maratonei {
                     variableKeyName.Add( variable.Name, val );
 
                 }
+                
+                // Adiciona as restrições ao problema
                 Expression expression = Expression.EmptyExpression;
                 foreach (var val in input.Restrictions) {
                     for (int i = 0; i < val.Values.Count( ); i++) {
@@ -56,6 +63,7 @@ namespace Maratonei {
                     expression = Expression.EmptyExpression;
                 }
 
+                // Adiciona a função objetiva ao modelo
                 expression = Expression.EmptyExpression;
                 for (int i = 0; i < input.Objective.Values.Count( ); i++) {
                     expression = input.Objective.Values.ElementAt( i ) * variables.ElementAt( i ) + expression;
@@ -67,28 +75,33 @@ namespace Maratonei {
                     model.AddObjective( new Objective( expression, "Z", OPTANO.Modeling.Optimization.Enums.ObjectiveSense.Minimize ) );
                 }
 
+                // Resolve o modelo por meio do GLPK
                 var solver = new GLPKSolver( );
                 solver.Solve( model );
                 var solution = solver.Solve( model );
 
+                // Renomeia as variaveis para as variaveis do problema recebido
                 var variablesRenamed = new Dictionary<string, double>( );
                 foreach (var val in solution.VariableValues) {
                     variablesRenamed.Add( variableKeyName[ val.Key ], val.Value );
                 }
-
+               
                 var objectiveRenamed = new Dictionary<string, double>( );
                 foreach (var val in solution.ObjectiveValues) {
                     objectiveRenamed.Add( "Z", val.Value );
                 }
-
+                
+                // Formata a resposta
                 var resp = new GLPKOutput {
                     Objectives = objectiveRenamed,
                     Variables = variablesRenamed,
                     Status = solution.Status
                 };
-
+                
+                // Retorna a resposta
                 return Ok( resp );
             } catch {
+                // Para qualquer erro na resolução
                 return BadRequest( "It was not possible to calculate the simplex" );
             }
         }
