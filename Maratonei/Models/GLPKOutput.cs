@@ -4,6 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Maratonei.Models {
+    
+    /// <summary>
+    /// Objeto para para o resultado
+    /// </summary>
     public class GLPKOutput {
 
         public IDictionary<string, double> Variables { get; set; }
